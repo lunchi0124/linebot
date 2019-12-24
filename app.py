@@ -1,10 +1,3 @@
-請用(python開啟).py
-今年稍早
-1月9日
-
-祤夜空上傳了 1 個項目
-文字
-請用(python開啟).py
 from flask import Flask, request, abort
 
 import urllib.request, json
