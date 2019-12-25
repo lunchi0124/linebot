@@ -24,6 +24,8 @@ line_bot_api = LineBotApi(ACCESS_TOKEN)
 # Channel Secret
 handler = WebhookHandler(SECRET)
 
+pm_site = {}
+
 @app.route("/")
 def hello_world():
     return "hello world!"
@@ -47,6 +49,12 @@ def callback():
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+#     _message = TextSendMessage(text='Nice to meet you!')
+#     _message = TextSendMessage(text=(event.source.user_id)) #reply userid
+#     line_bot_api.reply_message(event.reply_token, _message)  
+    # message = TextSendMessage(text=event)
+#     print(event)
+
     msg = event.message.text
     _low_msg = msg.lower()
     
@@ -60,6 +68,10 @@ def handle_message(event):
             _message = TextSendMessage(text=cls)	#reply course
             line_bot_api.reply_message(event.reply_token, _message)
 #            line_bot_api.push_message(event.source.user_id, TextSendMessage(text='123'))
+    elif '誠品' in _token[0] or '書單' in _token[0]:
+        bookls = find_bookls(_token[1])
+        _message = TextSendMessage(text=bookls)	#reply course
+        line_bot_api.reply_message(event.reply_token, _message)
     elif '空氣' in _token[0] or 'pm2' in _low_token:
         # query PM2.5
         for _site in pm_site:
@@ -70,6 +82,21 @@ def handle_message(event):
     elif '!h' in _token[0] or '!help' in _token[0]:
         _message = TextSendMessage(text="請輸入:課程, 誠品, 空氣 + <關鍵字>")
         line_bot_api.reply_message(event.reply_token, _message)
+	
+def find_bookls(kw):
+    with open("ESLITE.json",'r') as load_f:
+        load_dict = json.load(load_f)
+    x = load_dict['items']
+    ans = ()
+    for i in x:
+        #if i['title'] == "title":
+        if i['title'].find(str(kw))== -1:
+            pass
+#             print("")
+        else:
+            ans= (i['title']+i['link'])
+#             print (i['title'], i['link'])
+    return ans
 
 def loadPMJson():
     with urllib.request.urlopen("http://opendata2.epa.gov.tw/AQI.json") as url:
@@ -79,7 +106,7 @@ def loadPMJson():
 
 def getCls(cls_prefix):
     ret_cls = []
-    urlstr = 'https://course.thu.edu.tw/search-result/107/1/'
+    urlstr = 'https://course.thu.edu.tw/search-result/108/1/'
     postfix = '/all/all'
     
     qry_cls = urlstr + cls_prefix + postfix
@@ -98,8 +125,10 @@ def getCls(cls_prefix):
 
     return ret_cls
         
+            
 import os
 if __name__ == "__main__":
+    # load PM2.5 records
     loadPMJson()
     
     port = int(os.environ.get('PORT', 5000))
